@@ -18,14 +18,15 @@ def create(data):
         db.session.commit()
 
         # Add details to the new FormulaMain object
-        for detail in details:
+        for index, detail in enumerate(details):
             pressure = detail.get("pressure")
             process_time = detail.get("process_time")
 
             new_detail = FormulaDetail(
                 formula_main=new_formula,
                 pressure=pressure,
-                process_time=process_time
+                process_time=process_time,
+                sequence=index
             )
 
             db.session.add(new_detail)
@@ -136,14 +137,15 @@ def update(formula_id, data):
 
         # Add new details to the formula
         details = data.get("detail")
-        for detail in details:
+        for index, detail in enumerate(details):
             pressure = detail.get("pressure")
             process_time = detail.get("processTime")
 
             new_detail = FormulaDetail(
                 formula_main=formula,
                 pressure=pressure,
-                process_time=process_time
+                process_time=process_time,
+                sequence=index,
             )
             db.session.add(new_detail)
 
