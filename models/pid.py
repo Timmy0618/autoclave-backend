@@ -1,6 +1,7 @@
 from models.shared import db
 from sqlalchemy import Column, Integer, Boolean, DateTime
 from datetime import datetime
+from sqlalchemy.orm import relationship
 
 
 class Pid(db.Model):
@@ -12,3 +13,5 @@ class Pid(db.Model):
     step = Column(Integer)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    schedules = relationship('Schedule', back_populates='pid')  # New relationship

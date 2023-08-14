@@ -7,7 +7,7 @@ from datetime import datetime
 class FormulaMain(db.Model):
     __tablename__ = 'formula_main'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(length=50))
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     formula_details = relationship('FormulaDetail', backref='formula_main')

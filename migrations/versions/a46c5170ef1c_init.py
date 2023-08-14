@@ -1,8 +1,8 @@
 """init
 
-Revision ID: eab3ce63070d
+Revision ID: a46c5170ef1c
 Revises: 
-Create Date: 2023-08-14 10:13:42.621519
+Create Date: 2023-08-14 14:19:05.932918
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'eab3ce63070d'
+revision = 'a46c5170ef1c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,8 +21,10 @@ def upgrade():
     op.create_table('festo_history',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('slave_id', sa.Integer(), nullable=True),
-                    sa.Column('batch_number', sa.String(length=50), nullable=True),
-                    sa.Column('formula_name', sa.String(length=50), nullable=True),
+                    sa.Column('batch_number', sa.String(
+                        length=50), nullable=True),
+                    sa.Column('formula_name', sa.String(
+                        length=50), nullable=True),
                     sa.Column('sequence', sa.Integer(), nullable=True),
                     sa.Column('pressure', sa.Integer(), nullable=True),
                     sa.Column('create_time', sa.DateTime(
@@ -40,13 +42,12 @@ def upgrade():
                     ), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.create_table('schedule_detail',
+    op.create_table('pid',
                     sa.Column('id', sa.Integer(), nullable=False),
-                    sa.Column('pressure', sa.Integer(), nullable=True),
-                    sa.Column('process_time', sa.Integer(), nullable=True),
-                    sa.Column('reset_times', sa.Integer(), nullable=True),
-                    sa.Column('time_start', sa.DateTime(), nullable=True),
-                    sa.Column('time_end', sa.DateTime(), nullable=True),
+                    sa.Column('kp', sa.Integer(), nullable=True),
+                    sa.Column('ki', sa.Integer(), nullable=True),
+                    sa.Column('kd', sa.Integer(), nullable=True),
+                    sa.Column('step', sa.Integer(), nullable=True),
                     sa.Column('create_time', sa.DateTime(
                     ), nullable=False, server_default=sa.func.now()),
                     sa.Column('update_time', sa.DateTime(
@@ -69,14 +70,15 @@ def upgrade():
                     sa.Column('formula_main_id', sa.Integer(), nullable=True),
                     sa.Column('name', sa.String(length=50), nullable=True),
                     sa.Column('slave_id', sa.Integer(), nullable=True),
-                    sa.Column('batch_number', sa.String(length=50), nullable=True),
+                    sa.Column('batch_number', sa.String(
+                        length=50), nullable=True),
                     sa.Column('warning_time', sa.Integer(), nullable=True),
                     sa.Column('create_time', sa.DateTime(
                     ), nullable=False, server_default=sa.func.now()),
                     sa.Column('update_time', sa.DateTime(
                     ), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
                     sa.ForeignKeyConstraint(['formula_main_id'], [
-                        'formula_main.id'], ),
+                                            'formula_main.id'], ),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('batch_number')
                     )
@@ -91,7 +93,7 @@ def upgrade():
                     sa.Column('update_time', sa.DateTime(
                     ), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
                     sa.ForeignKeyConstraint(['formula_main_id'], [
-                        'formula_main.id'], ),
+                                            'formula_main.id'], ),
                     sa.PrimaryKeyConstraint('id')
                     )
     op.create_table('festo_current_detail',
@@ -111,19 +113,33 @@ def upgrade():
     op.create_table('schedule',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('festo_main_id', sa.Integer(), nullable=True),
-                    sa.Column('schedule_detail_id',
-                              sa.Integer(), nullable=True),
-                    sa.Column('sequence', sa.Integer(), nullable=True),
+                    sa.Column('pid_id', sa.Integer(), nullable=True),
                     sa.Column('check_pressure', sa.Boolean(), nullable=True),
-                    sa.Column('status', sa.Integer(), nullable=True),
                     sa.Column('create_time', sa.DateTime(
                     ), nullable=False, server_default=sa.func.now()),
                     sa.Column('update_time', sa.DateTime(
                     ), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
                     sa.ForeignKeyConstraint(
                         ['festo_main_id'], ['festo_main.id'], ),
-                    sa.ForeignKeyConstraint(['schedule_detail_id'], [
-                        'schedule_detail.id'], ),
+                    sa.ForeignKeyConstraint(['pid_id'], ['pid.id'], ),
+                    sa.PrimaryKeyConstraint('id')
+                    )
+    op.create_table('schedule_detail',
+                    sa.Column('id', sa.Integer(), nullable=False),
+                    sa.Column('schedule_id', sa.Integer(), nullable=True),
+                    sa.Column('status', sa.Integer(), nullable=True),
+                    sa.Column('sequence', sa.Integer(), nullable=True),
+                    sa.Column('pressure', sa.Integer(), nullable=True),
+                    sa.Column('process_time', sa.Integer(), nullable=True),
+                    sa.Column('reset_times', sa.Integer(), nullable=True),
+                    sa.Column('time_start', sa.DateTime(), nullable=True),
+                    sa.Column('time_end', sa.DateTime(), nullable=True),
+                    sa.Column('create_time', sa.DateTime(
+                    ), nullable=False, server_default=sa.func.now()),
+                    sa.Column('update_time', sa.DateTime(
+                    ), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
+                    sa.ForeignKeyConstraint(
+                        ['schedule_id'], ['schedule.id'], ),
                     sa.PrimaryKeyConstraint('id')
                     )
     # ### end Alembic commands ###
@@ -131,12 +147,13 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('schedule_detail')
     op.drop_table('schedule')
     op.drop_table('festo_current_detail')
     op.drop_table('formula_detail')
     op.drop_table('festo_main')
     op.drop_table('user')
-    op.drop_table('schedule_detail')
+    op.drop_table('pid')
     op.drop_table('formula_main')
     op.drop_table('festo_history')
     # ### end Alembic commands ###
