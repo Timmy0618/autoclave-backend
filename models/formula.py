@@ -12,6 +12,8 @@ class FormulaMain(db.Model):
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     formula_details = relationship('FormulaDetail', backref='formula_main')
 
+    festos = relationship('FestoMain', back_populates='formula')
+
 
 class FormulaDetail(db.Model):
     __tablename__ = 'formula_detail'

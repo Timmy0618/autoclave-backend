@@ -2,6 +2,7 @@ from routers.swagger import swagger_ui_blueprint
 from routers.schedule import schedule
 from routers.formula import formula
 from routers.user import user
+from routers.festo import festo
 
 
 class routes:
@@ -10,3 +11,4 @@ class routes:
         app.register_blueprint(schedule, url_prefix='/schedule')
         app.register_blueprint(formula, url_prefix='/formula')
         app.register_blueprint(user, url_prefix='/user')
+        app.register_blueprint(festo, url_prefix='/festo')
