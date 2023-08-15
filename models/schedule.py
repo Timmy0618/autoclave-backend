@@ -7,13 +7,12 @@ from datetime import datetime
 class Schedule(db.Model):
     __tablename__ = 'schedule'
     id = Column(Integer, primary_key=True)
-    festo_main_id = Column(Integer, ForeignKey('festo_main.id'))
+    festo_main_id = Column(Integer, ForeignKey('festo_main.id'), unique=True)
     pid_id = Column(Integer, ForeignKey('pid.id'))
-    check_pressure = Column(Boolean, default=False)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
-    festo_main = relationship('FestoMain', back_populates='schedules')
+    festo_main = relationship('FestoMain', back_populates='schedule')
     pid = relationship('Pid', back_populates='schedules')
     # Updated back_populates value
     schedule_details = relationship(
@@ -27,6 +26,7 @@ class ScheduleDetail(db.Model):
     sequence = Column(Integer)
     pressure = Column(Integer)
     status = Column(Integer)
+    check_pressure = Column(Boolean, default=False)
     process_time = Column(Integer)
     reset_times = Column(Integer, default=0)
     time_start = Column(DateTime)

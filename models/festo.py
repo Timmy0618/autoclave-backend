@@ -17,7 +17,8 @@ class FestoMain(db.Model):
 
     festo_current_detail = relationship(
         'FestoCurrentDetail', uselist=False, back_populates='festo_main')
-    schedules = relationship('Schedule', back_populates='festo_main')
+    schedule = relationship('Schedule', uselist=False,
+                            back_populates='festo_main')
     formula = relationship('FormulaMain', back_populates='festos')
 
 
