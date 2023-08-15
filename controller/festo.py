@@ -1,6 +1,8 @@
 from flask import jsonify, make_response, current_app
 from models.festo import FestoMain
 from models.formula import FormulaMain
+from models.schedule import Schedule
+from controller.schedule import update_schedules
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from models.shared import db
@@ -23,9 +25,19 @@ def create(data):
             create_time=datetime.now(),
             update_time=datetime.now()
         )
+        db.session.add(new_festo)
+        db.session.commit()
+
+        # Create a new Schedule for the FestoMain
+        new_schedule = Schedule(
+            festo_main_id=new_festo.id,
+            pid_id=1,  # You can set this value if needed
+            create_time=datetime.now(),
+            update_time=datetime.now()
+        )
 
         # Add the new FestoMain object to the database session
-        db.session.add(new_festo)
+        db.session.add(new_schedule)
         db.session.commit()
 
         # Build the result to return
@@ -54,6 +66,19 @@ def read(festo_id):
 
         formula_name = festo.formula.name if festo.formula else None
         formula_id = festo.formula.id if festo.formula else None
+        schedules = []
+        if festo.schedule:
+            schedules = [{
+                "id": detail.id,
+                "name": formula_name,
+                "pressure": detail.pressure,
+                "processTime": detail.process_time,
+                "sequence": detail.sequence,
+                "status": detail.status,
+                "checkPressure": detail.check_pressure,
+                "timeEnd": detail.time_end,
+                "timeStart": detail.time_start,
+            } for detail in festo.schedule.schedule_details]
 
         # Build the response
         result = {
@@ -68,9 +93,9 @@ def read(festo_id):
                 "batchNumber": festo.batch_number,
                 "warningTime": festo.warning_time,
                 "createTime": festo.create_time,
-                "updateTime": festo.update_time
+                "updateTime": festo.update_time,
+                "schedules": schedules,
             },
-
         }
 
         return make_response(jsonify(result), 200)
@@ -88,6 +113,7 @@ def read_multi():
         for festo in festos:
             formula_name = festo.formula.name if festo.formula else None
             formula_id = festo.formula.id if festo.formula else None
+            schedule_id = festo.schedule.id if festo.schedule else None
 
             festo_list.append({
                 "id": festo.id,
@@ -97,6 +123,7 @@ def read_multi():
                 "slaveId": festo.slave_id,
                 "batchNumber": festo.batch_number,
                 "warningTime": festo.warning_time,
+                "scheduleId": schedule_id,
                 "createTime": festo.create_time,
                 "updateTime": festo.update_time
             })
@@ -121,12 +148,28 @@ def update(festo_id, data):
         formula_id = data.get("formulaId")
         batch_number = data.get("batchNumber")
         warning_time = data.get("warningTime")
+        option = data.get("option")
+
+        if option:
+            status = 2
+            if option == 'start':
+                status = 0
+
+            for detail in festo.schedule.schedule_details:
+                detail.status = status
 
         # Update the festo's properties if provided in the data
         if formula_id:
             formula = FormulaMain.query.get(formula_id)
             if formula is None:
                 return make_response(jsonify({"code": 404, "msg": "Formula not found."}), 404)
+
+            if festo.schedule:
+                for schedule_detail in festo.schedule.schedule_details:
+                    db.session.delete(schedule_detail)
+
+            update_schedules(formula, festo.schedule.id)
+
             festo.formula = formula
 
         if batch_number:
@@ -161,6 +204,12 @@ def delete(festo_id):
 
         if festo is None:
             return make_response(jsonify({"code": 404, "msg": "Festo not found."}), 404)
+
+        # Delete the associated schedules and schedule details
+        for schedule in festo.schedules:
+            for schedule_detail in schedule.schedule_details:
+                db.session.delete(schedule_detail)
+            db.session.delete(schedule)
 
         # Delete the festo from the database
         db.session.delete(festo)

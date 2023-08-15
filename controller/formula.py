@@ -89,7 +89,6 @@ def read_multi():
 
         # Query the FormulaMain table with offset and limit
         formulas = FormulaMain.query.offset(page-1).limit(limit).all()
-        print(formulas)
 
         # Build a list of formulas with their details
         formula_list = []

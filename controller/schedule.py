@@ -37,7 +37,8 @@ def create(data):
                 process_time=process_time,
                 time_start=time_start,
                 time_end=time_end,
-                reset_times=0  # You can adjust this as needed
+                reset_times=0,
+                check_pressure=1
             )
 
             new_schedule_main.schedule_details.append(new_schedule_detail)
@@ -87,6 +88,7 @@ def read(schedule_id):
                     {
                         "id": detail.id,
                         "pressure": detail.pressure,
+                        "sequence": detail.sequence,
                         "processTime": detail.process_time,
                         "timeStart": detail.time_start.strftime("%Y-%m-%d %H:%M:%S"),
                         "timeEnd": detail.time_end.strftime("%Y-%m-%d %H:%M:%S"),
@@ -134,30 +136,7 @@ def update(schedule_id, data):
         for schedule_detail in schedule.schedule_details:
             db.session.delete(schedule_detail)
 
-        current_time = datetime.now()
-        # Recreate schedule details based on the new formula details
-        for index, detail_data in enumerate(formula.formula_details):
-            pressure = detail_data.pressure
-            process_time = detail_data.process_time
-
-            time_start = current_time
-            time_end = current_time + timedelta(minutes=process_time)
-
-            new_schedule_detail = ScheduleDetail(
-                schedule_id=schedule.id,
-                pressure=pressure,
-                sequence=index,
-                status=0,
-                process_time=process_time,
-                time_start=time_start,
-                time_end=time_end,
-                reset_times=0  # You can adjust this as needed
-            )
-
-            db.session.add(new_schedule_detail)
-
-            # Update current_time for the next detail
-            current_time = time_end + timedelta(seconds=1)
+        update_schedules(formula, schedule.id)
 
         # Commit the changes to the database
         db.session.commit()
@@ -175,6 +154,100 @@ def update(schedule_id, data):
         current_app.logger.error(e)
         return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
 
+    finally:
+        db.session.close()
+
+
+def update_detail(schedule_detail_id, data):
+    try:
+        # Query the ScheduleDetail table by schedule_detail_id
+        schedule_detail = ScheduleDetail.query.get(schedule_detail_id)
+
+        # If the schedule detail is not found, return an error response
+        if schedule_detail is None:
+            return make_response(jsonify({"code": 404, "msg": "Schedule detail not found."}), 404)
+
+        # Extract the parameters from the JSON data
+        pressure = data.get("pressure")
+        process_time = data.get("processTime")
+        sequence = data.get("sequence")
+        status = data.get("status")
+        check_pressure = data.get("checkPressure")
+        time_start = data.get("timeStart")
+        time_end = data.get("timeEnd")
+
+        # Update the schedule detail's parameters
+        if pressure is not None:
+            schedule_detail.pressure = pressure
+        if process_time is not None:
+            schedule_detail.process_time = process_time
+        if sequence is not None:
+            schedule_detail.sequence = sequence
+        if status is not None:
+            schedule_detail.status = status
+        if check_pressure is not None:
+            schedule_detail.check_pressure = check_pressure
+        if time_start is not None:
+            schedule_detail.time_start = time_start
+        if time_end is not None:
+            schedule_detail.time_end = time_end
+
+        # Commit the changes to the database
+        db.session.commit()
+
+        # Build the result to return
+        result = {"code": 200, "msg": "Success", "id": schedule_detail.id}
+        return make_response(jsonify(result), 200)
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+
+    except Exception as e:
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+
+    finally:
+        db.session.close()
+
+
+def update_multi_detail(data):
+    try:
+        for detail_data in data:
+            schedule_detail_id = detail_data.get("id")
+            pressure = detail_data.get("pressure")
+            process_time = detail_data.get("processTime")
+            status = detail_data.get("status")
+            check_pressure = detail_data.get("checkPressure")
+
+            schedule_detail = ScheduleDetail.query.get(schedule_detail_id)
+
+            if schedule_detail is None:
+                return make_response(jsonify({"code": 404, "msg": f"Schedule Detail with ID {schedule_detail_id} not found."}), 404)
+
+            if pressure is not None:
+                schedule_detail.pressure = pressure
+            if process_time is not None:
+                schedule_detail.process_time = process_time
+            if status is not None:
+                schedule_detail.status = status
+            if check_pressure is not None:
+                schedule_detail.check_pressure = check_pressure
+
+        db.session.commit()
+
+        result = {"code": 200, "msg": "Success"}
+        return make_response(jsonify(result), 200)
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+
+    except Exception as e:
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
     finally:
         db.session.close()
 
@@ -230,3 +303,30 @@ def __check_and_get_entities(festo_main_id, pid_id, formula_id):
         return None, {"code": 404, "msg": "Formula not found."}
 
     return formula, None
+
+
+def update_schedules(formula, schedule_id):
+    current_time = datetime.now()
+    # Recreate schedule details based on the new formula details
+    for index, detail_data in enumerate(formula.formula_details):
+        pressure = detail_data.pressure
+        process_time = detail_data.process_time
+
+        time_start = current_time
+        time_end = current_time + timedelta(minutes=process_time)
+
+        new_schedule_detail = ScheduleDetail(
+            schedule_id=schedule_id,
+            pressure=pressure,
+            sequence=index,
+            status=2,
+            process_time=process_time,
+            time_start=time_start,
+            time_end=time_end,
+            reset_times=0  # You can adjust this as needed
+        )
+
+        db.session.add(new_schedule_detail)
+
+        # Update current_time for the next detail
+        current_time = time_end + timedelta(seconds=1)
