@@ -68,7 +68,7 @@ def read(formula_id):
             "data": {
                 "id": formula.id,
                 "name": formula.name,
-                "details": [{"pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
+                "details": [{"sequence": detail.sequence, "pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
             },
         }
         return make_response(jsonify(result), 200)
@@ -96,7 +96,9 @@ def read_multi():
             formula_info = {
                 "id": formula.id,
                 "name": formula.name,
-                "details": [{"pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
+                "createTime": formula.create_time,
+                "updateTime": formula.update_time,
+                # "details": [{"pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
             }
             formula_list.append(formula_info)
 
