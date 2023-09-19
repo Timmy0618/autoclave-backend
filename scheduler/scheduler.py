@@ -4,8 +4,8 @@ from models.festo import FestoMain, FestoHistory, FestoCurrentDetail
 from models.schedule import ScheduleDetail
 from sqlalchemy.exc import SQLAlchemyError
 from models.shared import db
-import datetime
 from modules.festo import festo as festo_obj
+from datetime import datetime, timedelta
 
 scheduler = APScheduler()
 
@@ -13,7 +13,7 @@ scheduler = APScheduler()
 @scheduler.task('interval', id='schedule', seconds=5)  # 每3600秒执行一次
 def perform_schedule():
     with scheduler.app.app_context():
-        current_time = datetime.datetime.now()
+        current_time = datetime.now()
         festo_obj(current_app.config['COM_PORT'])
 
         try:
@@ -23,7 +23,6 @@ def perform_schedule():
                 slave_id = festo.slave_id
                 schedule_details = ScheduleDetail.query.filter_by(
                     schedule_id=festo.schedule.id).all()
-
                 # 更新 FestoCurrentDetail 表的壓力值
                 # festo_current_detail = FestoCurrentDetail.query.filter_by(
                 #     slave_id=slave_id).first()
@@ -38,10 +37,10 @@ def perform_schedule():
                 #     db.session.add(festo_current_detail)
 
                 for detail in schedule_details:
+
                     if detail.time_start <= current_time <= detail.time_end:
                         status = detail.status
                         pressure = detail.pressure
-
                         if status == 0:
                             # 待执行状态，执行相应操作
                             print(
@@ -63,7 +62,7 @@ def perform_schedule():
                                 pressure=pressure  # 要改成讀取festo壓力
                             )
                             db.session.add(festo_history)
-                            #檢查壓力有沒有到設定值，沒有的話要reset_times += 1
+                            # 檢查壓力有沒有到設定值，沒有的話要reset_times += 1
                         elif status == 2:
                             # 结束状态
                             # 更新festo壓力=0
@@ -74,6 +73,31 @@ def perform_schedule():
                         detail.status = 2
 
             db.session.commit()
+        except SQLAlchemyError as e:
+            current_app.logger.error(e)
+
+        except Exception as e:
+            current_app.logger.error(e)
+
+        finally:
+            db.session.close()
+
+
+@scheduler.task('interval', id='history_checker', seconds=86400)
+def history_checker():
+    with scheduler.app.app_context():
+        print("clear history table")
+        try:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+
+            records_to_delete = FestoHistory.query.filter(
+                FestoHistory.create_time <= thirty_days_ago).all()
+
+            for record in records_to_delete:
+                db.session.delete(record)
+
+            db.session.commit()
+
         except SQLAlchemyError as e:
             current_app.logger.error(e)
 
