@@ -4,7 +4,7 @@ from models.formula import FormulaMain
 from models.schedule import Schedule
 from controller.schedule import update_schedules
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
+from datetime import datetime, timedelta
 from models.shared import db
 
 
@@ -136,6 +136,10 @@ def read_multi():
         current_app.logger.error(e)
         return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
 
+    except Exception as e:
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+
 
 def update(festo_id, data):
     try:
@@ -154,6 +158,24 @@ def update(festo_id, data):
             status = 2
             if option == 'start':
                 status = 0
+
+                current_time = datetime.now()
+
+                sorted_details = sorted(
+                    festo.schedule.schedule_details, key=lambda x: x.sequence)
+                cumulative_time = current_time
+
+                for detail in sorted_details:
+                    detail.status = status
+
+                    # Calculate the end time based on cumulative time and process_time
+                    end_time = cumulative_time + \
+                        timedelta(minutes=detail.process_time)
+                    detail.time_start = cumulative_time
+                    detail.time_end = end_time
+
+                    # Update cumulative time for next iteration
+                    cumulative_time = end_time+timedelta(seconds=1)
 
             for detail in festo.schedule.schedule_details:
                 detail.status = status

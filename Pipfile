@@ -29,6 +29,9 @@ flask-cors = "*"
 flask-swagger-ui = "*"
 pytest = "*"
 faker = "*"
+flask-apscheduler = "*"
+pyserial = "*"
+crcmod = "*"
 
 [dev-packages]
 
