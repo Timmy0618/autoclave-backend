@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from controller.festo import create, read, read_multi, update, delete
+from controller.festo import create, read, read_multi, update, delete, get_currently_executing_info
 
 festo = Blueprint("festo", __name__)
 
@@ -34,3 +34,9 @@ def update_festo(festo_id):
 def delete_festo(festo_id):
 
     return delete(festo_id)
+
+
+@festo.route("/executing", methods=["GET"])
+def executing_festo():
+
+    return get_currently_executing_info()

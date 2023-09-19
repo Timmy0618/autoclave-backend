@@ -252,3 +252,66 @@ def delete(festo_id):
 
     finally:
         db.session.close()
+
+
+def get_currently_executing_info():
+    try:
+        # 获取当前时间
+        current_time = datetime.now()
+
+        # 查询所有 FestoMain
+        festos = FestoMain.query.all()
+
+        executing_info = []
+
+        for festo in festos:
+            # 查询与当前时间最接近的 Schedule
+            nearest_schedule = None
+            min_time_diff = None
+
+            for schedule in festo.schedule.schedule_details:
+                time_start = schedule.time_start
+                time_end = schedule.time_end
+
+                # 检查当前时间是否在时间范围内
+                if time_start <= current_time <= time_end:
+                    nearest_schedule = schedule
+                    break
+
+                # 计算当前时间距离该 Schedule 最近的时间差
+                time_diff = min(abs((current_time - time_start).total_seconds()),
+                                abs((current_time - time_end).total_seconds()))
+
+                if min_time_diff is None or time_diff < min_time_diff:
+                    min_time_diff = time_diff
+                    nearest_schedule = schedule
+
+            if nearest_schedule:
+                formula = festo.formula
+
+                executing_info.append({
+                    "id": festo.id,
+                    "festoName": festo.name,
+                    "warningTime": festo.warning_time,
+                    "formulaName": formula.name,
+                    "schedulePressure": nearest_schedule.pressure,
+                    "scheduleSequence": nearest_schedule.sequence,
+                    "scheduleStatus": nearest_schedule.status,
+                    "checkPressure": nearest_schedule.check_pressure
+                })
+
+        # 将查询结果包装成响应格式
+        result = {"code": 200, "msg": "Success", "data": executing_info}
+        return make_response(jsonify(result))
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+
+    except Exception as e:
+        current_app.logger.error(e)
+        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+
+    finally:
+        db.session.close()

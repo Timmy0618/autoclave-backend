@@ -63,6 +63,7 @@ def perform_schedule():
                                 pressure=pressure  # 要改成讀取festo壓力
                             )
                             db.session.add(festo_history)
+                            #檢查壓力有沒有到設定值，沒有的話要reset_times += 1
                         elif status == 2:
                             # 结束状态
                             # 更新festo壓力=0
