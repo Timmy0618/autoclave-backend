@@ -6,6 +6,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 import pytz
 import csv
+import io
 
 
 def get_unique_batch_numbers():
@@ -69,27 +70,32 @@ def get_batch_records_csv(data):
 
         batch_records = query.all()
 
-        # Create CSV
-        csv_filename = 'batch_records.csv'
-        with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:  # 添加encoding参数以支持多语言
-            fieldnames = ['id', 'slave_id', 'batch_number', 'formula_name',
-                          'sequence', 'pressure', 'create_time', 'update_time']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        # Create CSV in memory
+        csv_buffer = io.StringIO()
+        fieldnames = ['id', 'slave_id', 'batch_number', 'formula_name',
+                      'sequence', 'pressure', 'create_time', 'update_time']
+        writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
 
-            writer.writeheader()
-            for record in batch_records:
-                writer.writerow({
-                    'id': record.id,
-                    'slave_id': record.slave_id,
-                    'batch_number': record.batch_number,
-                    'formula_name': record.formula_name,
-                    'sequence': record.sequence,
-                    'pressure': record.pressure,
-                    'create_time': record.create_time,
-                    'update_time': record.update_time,
-                })
+        writer.writeheader()
+        for record in batch_records:
+            writer.writerow({
+                'id': record.id,
+                'slave_id': record.slave_id,
+                'batch_number': record.batch_number,
+                'formula_name': record.formula_name,
+                'sequence': record.sequence,
+                'pressure': record.pressure,
+                'create_time': record.create_time,
+                'update_time': record.update_time,
+            })
 
-        return send_file(csv_filename, as_attachment=True)
+        # Prepare response
+        csv_buffer.seek(0)
+        response = make_response(csv_buffer.getvalue())
+        response.headers['Content-Disposition'] = 'attachment; filename=batch_records.csv'
+        response.headers['Content-Type'] = 'text/csv'
+
+        return response
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
