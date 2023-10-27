@@ -2,6 +2,8 @@ from flask import current_app, jsonify, make_response, request
 from models.model import FormulaMain, FormulaDetail
 from models.shared import db
 from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
+import pytz
 
 
 def create(data):
@@ -132,6 +134,10 @@ def update(formula_id, data):
         name = data.get("name")
         formula.name = name
 
+        # Update the update_time field with the current time in Taipei timezone
+        taipei_tz = pytz.timezone('Asia/Taipei')
+        formula.update_time = datetime.now(taipei_tz)
+
         # Delete the old details
         for old_detail in formula.formula_details:
             db.session.delete(old_detail)
@@ -148,6 +154,7 @@ def update(formula_id, data):
                 process_time=process_time,
                 sequence=index,
             )
+
             db.session.add(new_detail)
 
         db.session.commit()
