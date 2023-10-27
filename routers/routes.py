@@ -3,6 +3,7 @@ from routers.schedule import schedule
 from routers.formula import formula
 from routers.user import user
 from routers.festo import festo
+from routers.history import history
 
 
 class routes:
@@ -12,3 +13,4 @@ class routes:
         app.register_blueprint(formula, url_prefix='/formula')
         app.register_blueprint(user, url_prefix='/user')
         app.register_blueprint(festo, url_prefix='/festo')
+        app.register_blueprint(history, url_prefix='/history')
