@@ -16,6 +16,8 @@ class festo:
             self.ex = ""
         except serial.SerialException as ex:
             self.ex = ex
+            print(ex)
+            return False
 
     def print_response(self):
         print("""slaveId: %s\nfuncCode: %s\nbytesCount: %s\ndata: %s\ncrc16:%s """
@@ -221,7 +223,7 @@ class festo:
 
 if __name__ == "__main__":
     print("Start")
-    comPort = '/dev/cu.usbserial-140'
+    comPort = '/dev/cu.usbserial-LKAC390507'
     festoObj = festo(comPort)
     while (True):
         id = int(input("請輸入機器id:"))
