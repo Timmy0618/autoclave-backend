@@ -33,6 +33,7 @@ flask-apscheduler = "*"
 pyserial = "*"
 crcmod = "*"
 pytz = "*"
+pygame = "*"
 
 [dev-packages]
 

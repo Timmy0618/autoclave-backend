@@ -167,6 +167,7 @@ def update(festo_id, data):
 
                 for detail in sorted_details:
                     detail.status = status
+                    detail.reset_times = 0
 
                     # Calculate the end time based on cumulative time and process_time
                     end_time = cumulative_time + \

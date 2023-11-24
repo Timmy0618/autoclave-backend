@@ -1,5 +1,5 @@
 from models.shared import db
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -26,7 +26,7 @@ class FestoCurrentDetail(db.Model):
     __tablename__ = 'festo_current_detail'
     id = Column(Integer, primary_key=True)
     slave_id = Column(Integer, unique=True)
-    pressure = Column(Integer)
+    pressure = Column(Float)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -42,6 +42,6 @@ class FestoHistory(db.Model):
     batch_number = Column(String(length=50))
     formula_name = Column(String(length=50))
     sequence = Column(Integer)
-    pressure = Column(Integer)
+    pressure = Column(Float)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)

@@ -214,11 +214,12 @@ class festo:
             print("Error: Response does not have enough elements")
 
     def __print_bytes_array(self, byte_array, flag='write'):
-        print(f"{flag} {len(byte_array)} bytes:")
-        for i in range(0, len(byte_array), 2):
-            chunk = byte_array[i:i+2]
-            print(chunk.hex(), end=' ')
-        print("\n")
+        # print(f"{flag} {len(byte_array)} bytes:")
+        # for i in range(0, len(byte_array), 2):
+        #     chunk = byte_array[i:i+2]
+        #     print(chunk.hex(), end=' ')
+        # print("\n")
+        return
 
 
 if __name__ == "__main__":
