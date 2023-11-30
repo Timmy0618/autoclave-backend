@@ -2,16 +2,13 @@ FROM python:3.10.8-slim
 
 WORKDIR /usr/app
 
-COPY Pipfile* ./
+COPY requirements.txt ./
 
-RUN mkdir logs
-
-RUN pip install --upgrade pip \
-    && pip install pipenv \
-    && pipenv install --system --deploy --ignore-pipfile 
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
 EXPOSE 5000
 
-CMD ["pipenv", "run", "flask", "run", "--host=0.0.0.0"]
+# 定义启动命令
+CMD ["python", "app.py"]

@@ -15,10 +15,10 @@ services:
     container_name: autoclave-backend
     restart: unless-stopped
     ports:
-      - 5002:5000
+      - 5002:5002
     image: timmy0618/autoclave-backend
-    devices:
-      - "/dev/ttyS0:/COM1"  # 串口设备的映射
+    # devices:
+    #   - "/dev/ttyS0:/COM1"  # 串口设备的映射
 
   database:
     image: mysql:8.0.33
