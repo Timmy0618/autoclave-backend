@@ -1,0 +1,24 @@
+from urllib.parse import quote_plus
+import os
+from datetime import timedelta
+
+
+class Config:
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    PORT = int(os.environ.get('PORT', 5002))
+    BASE_DIR = basedir
+    DEBUG = bool(os.environ.get('DEBUG', True))
+    SECRET_KEY = 'mysecretkey'
+    # 设置您的数据库连接信息
+    DB_USERNAME = 'root'
+    DB_PASSWORD = '1qaz@WSX3edc'
+    DB_HOST = 'database'
+    DB_PORT = '3306'
+    DB_NAME = 'autoclave'
+    COM_PORT = os.environ.get('COM_PORT', 'COM1')
+    encoded_password = quote_plus(DB_PASSWORD)
+
+    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USERNAME}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'autoclave-super-secret')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
