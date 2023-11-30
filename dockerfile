@@ -1,17 +1,17 @@
-FROM python:3.10.8 as build
+FROM python:3.10.8-slim
 
 WORKDIR /usr/app
-RUN python -m venv /usr/app/venv
-ENV PATH="/usr/app/venv/bin:$PATH"
 
-COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+COPY Pipfile* ./
 
-FROM python:3.10.8-alpine3.17
-WORKDIR /usr/app
-COPY --from=build /usr/app/venv ./venv
-COPY /myapp .
+RUN mkdir logs
 
-ENV PATH="/usr/app/venv/bin:$PATH"
-CMD [ "python", "main.py" ]
+RUN pip install --upgrade pip \
+    && pip install pipenv \
+    && pipenv install --system --deploy --ignore-pipfile 
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["pipenv", "run", "flask", "run", "--host=0.0.0.0"]

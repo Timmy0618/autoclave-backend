@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  frontend:
+    container_name: autoclave-frontend
+    image: timmy0618/autoclave-frontend
+    ports:
+      - 80:80
+
+  backend:
+    volumes:
+      - ./logs:/logs
+    environment:
+      - TZ=Asia/Taipei
+    container_name: autoclave-backend
+    restart: unless-stopped
+    ports:
+      - 5002:5000
+    image: timmy0618/autoclave-backend
+    devices:
+      - "/dev/ttyS0:/COM1"  # 串口设备的映射
+
+  database:
+    image: mysql:8.0.33
+    container_name: autoclave-db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=1qaz@WSX3edc
+      - MYSQL_DATABASE=autoclave
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+      - TZ=Asia/Taipei
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: autoclave-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    depends_on:
+      - database
+    links:
+      - database
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+
+volumes:
+  mysql_data:

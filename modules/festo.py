@@ -14,6 +14,7 @@ class festo:
             self.data = ""
             self.crc16 = ""
             self.ex = ""
+            self.delay = 0.5
         except serial.SerialException as ex:
             self.ex = ex
             print(ex)
@@ -35,7 +36,7 @@ class festo:
         bytes_data = bytearray(inputData)
         self.ser.write(bytes_data)
         self.__print_bytes_array(bytes_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(7)
         self.__print_bytes_array(response, flag='read')
         print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
@@ -52,7 +53,7 @@ class festo:
         bytes_data = bytearray(inputData)
         self.ser.write(bytes_data)
         self.__print_bytes_array(bytes_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(7)
         self.__print_bytes_array(response, flag='read')
         print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
@@ -69,7 +70,7 @@ class festo:
         bytes_data = bytearray(inputData)
         self.ser.write(bytes_data)
         self.__print_bytes_array(bytes_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(7)
         self.__print_bytes_array(response, flag='read')
         checkResult = self.__checkCRC(response[:-2], response[-2:])
@@ -89,7 +90,7 @@ class festo:
         bytes_data = bytearray(inputData)
         self.ser.write(bytes_data)
         self.__print_bytes_array(bytes_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(13)
         self.__print_bytes_array(response, flag='read')
         print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
@@ -136,7 +137,7 @@ class festo:
         byte_data = bytearray(inputData)
         self.ser.write(byte_data)
         self.__print_bytes_array(byte_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(8)
         print("read 8 byte data:", (", ".join(hex(b) for b in response)))
         print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
@@ -154,7 +155,7 @@ class festo:
         byte_data = bytearray(inputData)
         self.ser.write(byte_data)
         self.__print_bytes_array(byte_data)
-        time.sleep(0.5)  # wait 0.5s
+        time.sleep(self.delay)
         response = self.ser.read(8)
         self.__print_bytes_array(response, flag='read')
         print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))

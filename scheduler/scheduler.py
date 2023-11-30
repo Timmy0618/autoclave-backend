@@ -19,9 +19,9 @@ mp3_file_path = "asset/beep-warning.mp3"
 def perform_schedule():
     with scheduler.app.app_context():
         current_time = datetime.now()
-        festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
-
-        if not festo_obj_conn:
+        try:
+            festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
+        except:
             print("RS485 connect error")
             return
 
