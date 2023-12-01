@@ -13,18 +13,17 @@ scheduler = APScheduler()
 pygame.init()
 
 mp3_file_path = "asset/beep-warning.mp3"
+try:
+    festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
+except:
+    print("RS485 connect error")
+    exit()
 
 
 @scheduler.task('interval', id='schedule', seconds=5)  # 每3600秒执行一次
 def perform_schedule():
     with scheduler.app.app_context():
         current_time = datetime.now()
-        try:
-            festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
-        except:
-            print("RS485 connect error")
-            return
-
         try:
             festos = FestoMain.query.all()
 
@@ -34,6 +33,12 @@ def perform_schedule():
                     schedule_id=festo.schedule.id).order_by(ScheduleDetail.sequence).all()
 
                 festo_pressure = festo_obj_conn.readSetPressure(slave_id)
+                if festo_pressure is None:
+                    e = f"Can't read {festo.name} pressure"
+                    print(e)
+                    current_app.logger.error(e)
+                    continue
+
                 festo_current_detail = FestoCurrentDetail.query.filter_by(
                     slave_id=slave_id).first()
 
@@ -130,6 +135,9 @@ def schedule_check_play_mp3():
                     # 播放 MP3 文件
                     pygame.mixer.music.load(mp3_file_path)
                     pygame.mixer.music.play()
+                    e = f"{festo.name} pressure not reach warning !"
+                    print(e)
+                    current_app.logger.error(e)
 
                     return
         return

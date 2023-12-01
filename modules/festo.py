@@ -39,7 +39,10 @@ class festo:
         time.sleep(self.delay)
         response = self.ser.read(7)
         self.__print_bytes_array(response, flag='read')
-        print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
+        is_crc_ok = self.__checkCRC(response[:-2], response[-2:])
+        print("CRC checK: ", is_crc_ok)
+        if not is_crc_ok:
+            return None
         self.__setValue(response)
         result = round(int.from_bytes(self.data, "big")/100-100, 2)
 
@@ -56,7 +59,10 @@ class festo:
         time.sleep(self.delay)
         response = self.ser.read(7)
         self.__print_bytes_array(response, flag='read')
-        print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
+        is_crc_ok = self.__checkCRC(response[:-2], response[-2:])
+        print("CRC checK: ", is_crc_ok)
+        if not is_crc_ok:
+            return None
         self.__setValue(response)
         result = round(int.from_bytes(self.data, "big")/100-100, 2)
 
@@ -93,7 +99,10 @@ class festo:
         time.sleep(self.delay)
         response = self.ser.read(13)
         self.__print_bytes_array(response, flag='read')
-        print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
+        is_crc_ok = self.__checkCRC(response[:-2], response[-2:])
+        print("CRC checK: ", is_crc_ok)
+        if not is_crc_ok:
+            return None
         self.__setValue(response)
 
         # kp,ki,kd,step
@@ -140,7 +149,10 @@ class festo:
         time.sleep(self.delay)
         response = self.ser.read(8)
         print("read 8 byte data:", (", ".join(hex(b) for b in response)))
-        print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
+        is_crc_ok = self.__checkCRC(response[:-2], response[-2:])
+        print("CRC checK: ", is_crc_ok)
+        if not is_crc_ok:
+            return None
         self.__setValue(response)
 
     # write all PID parameter Kp, ki, kd, Step
@@ -158,7 +170,10 @@ class festo:
         time.sleep(self.delay)
         response = self.ser.read(8)
         self.__print_bytes_array(response, flag='read')
-        print("CRC checK: ", self.__checkCRC(response[:-2], response[-2:]))
+        is_crc_ok = self.__checkCRC(response[:-2], response[-2:])
+        print("CRC checK: ", is_crc_ok)
+        if not is_crc_ok:
+            return None
         self.__setValue(response)
 
     def __decToByteAry(self, dec):
