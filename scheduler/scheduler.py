@@ -13,11 +13,6 @@ scheduler = APScheduler()
 pygame.init()
 
 mp3_file_path = "asset/beep-warning.mp3"
-try:
-    festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
-except:
-    print("RS485 connect error")
-    exit()
 
 
 @scheduler.task('interval', id='schedule', seconds=5)  # 每3600秒执行一次
@@ -25,19 +20,27 @@ def perform_schedule():
     with scheduler.app.app_context():
         current_time = datetime.now()
         try:
+            festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
+        except:
+            current_app.logger.error(
+                f"{current_app.config['COM_PORT']} RS485 connect error")
+            print("RS485 connect error")
+            return
+
+        try:
             festos = FestoMain.query.all()
 
             for festo in festos:
-                slave_id = festo.slave_id
-                schedule_details = ScheduleDetail.query.filter_by(
-                    schedule_id=festo.schedule.id).order_by(ScheduleDetail.sequence).all()
-
-                festo_pressure = festo_obj_conn.readSetPressure(slave_id)
+                festo_pressure = festo_obj_conn.readVacuumPressure(slave_id)
                 if festo_pressure is None:
                     e = f"Can't read {festo.name} pressure"
                     print(e)
                     current_app.logger.error(e)
                     continue
+
+                slave_id = festo.slave_id
+                schedule_details = ScheduleDetail.query.filter_by(
+                    schedule_id=festo.schedule.id).order_by(ScheduleDetail.sequence).all()
 
                 festo_current_detail = FestoCurrentDetail.query.filter_by(
                     slave_id=slave_id).first()
@@ -69,12 +72,14 @@ def perform_schedule():
                                                          formula_name=festo.formula.name, sequence=detail.sequence,
                                                          pressure=festo_pressure)
                             db.session.add(festo_history)
-                            # 正負誤差超過 3% 就累積錯誤
-                            if not (dst_pressure * 0.97 > festo_pressure > dst_pressure * 1.03):
+                            # 正負誤差超過 3 就累積錯誤
+                            if not (dst_pressure + 3 > festo_pressure > dst_pressure - 3):
                                 detail.reset_times += 1
                                 # 延長 schedule time
                                 __update_schedule_start_time_and_end_time(
                                     detail.id)
+                                current_app.logger.warning(
+                                    f"延長 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
                         elif status == 2:
                             # 结束状态
                             detail.status = 2
@@ -86,9 +91,11 @@ def perform_schedule():
 
                     elif current_time > detail.time_end:
                         detail.status = 2
+                    else:
                         # 最後一個排成結束了
-                        if index == len(schedule_details)-1:
+                        if index == len(schedule_details)-1 and detail.status == 2:
                             festo_obj_conn.writePressure(slave_id, 0)
+                            print(f"stop {festo.name}")
 
             db.session.commit()
         except SQLAlchemyError as e:
@@ -135,9 +142,6 @@ def schedule_check_play_mp3():
                     # 播放 MP3 文件
                     pygame.mixer.music.load(mp3_file_path)
                     pygame.mixer.music.play()
-                    e = f"{festo.name} pressure not reach warning !"
-                    print(e)
-                    current_app.logger.error(e)
 
                     return
         return
@@ -149,13 +153,11 @@ def __update_schedule_start_time_and_end_time(schedule_id):
     schedule = ScheduleDetail.query.filter_by(id=schedule_id).first()
 
     if schedule:
-        schedule.time_start = current_time
-
         new_end_time = current_time + timedelta(minutes=schedule.process_time)
         schedule.time_end = new_end_time
 
         greater_sequence_details = ScheduleDetail.query.filter(
-            (ScheduleDetail.schedule_id == schedule_id) &
+            (ScheduleDetail.schedule_id == schedule.schedule_id) &
             (ScheduleDetail.sequence > schedule.sequence)
         ).all()
 
