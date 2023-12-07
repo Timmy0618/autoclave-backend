@@ -31,6 +31,7 @@ def perform_schedule():
             festos = FestoMain.query.all()
 
             for festo in festos:
+                slave_id = festo.slave_id
                 festo_pressure = festo_obj_conn.readVacuumPressure(slave_id)
                 if festo_pressure is None:
                     e = f"Can't read {festo.name} pressure"
@@ -38,7 +39,6 @@ def perform_schedule():
                     current_app.logger.error(e)
                     continue
 
-                slave_id = festo.slave_id
                 schedule_details = ScheduleDetail.query.filter_by(
                     schedule_id=festo.schedule.id).order_by(ScheduleDetail.sequence).all()
 
@@ -91,9 +91,8 @@ def perform_schedule():
 
                     elif current_time > detail.time_end:
                         detail.status = 2
-                    else:
                         # 最後一個排成結束了
-                        if index == len(schedule_details)-1 and detail.status == 2:
+                        if (index == len(schedule_details)-1) and detail.status == 2:
                             festo_obj_conn.writePressure(slave_id, 0)
                             print(f"stop {festo.name}")
 
@@ -138,7 +137,7 @@ def schedule_check_play_mp3():
         for festo in festos:
             schedule_details = festo.schedule.schedule_details
             for schedule_detail in schedule_details:
-                if (schedule_detail.reset_times*5/60 > festo.warning_time) and schedule_detail.status == 1:
+                if (schedule_detail.reset_times*5/60 > festo.warning_time) and schedule_detail.status == 1 and schedule_detail.check_pressure:
                     # 播放 MP3 文件
                     pygame.mixer.music.load(mp3_file_path)
                     pygame.mixer.music.play()

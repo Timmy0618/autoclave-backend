@@ -14,7 +14,7 @@ class festo:
             self.data = ""
             self.crc16 = ""
             self.ex = ""
-            self.delay = 0.5
+            self.delay = 0.1
         except serial.SerialException as ex:
             self.ex = ex
             print(ex)

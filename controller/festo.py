@@ -122,7 +122,7 @@ def read_multi():
                 "formulaId": formula_id,
                 "slaveId": festo.slave_id,
                 "batchNumber": festo.batch_number,
-                "warningTime": festo.warning_time,
+                "warningTime": festo.warning_time*5/60,
                 "scheduleId": schedule_id,
                 "createTime": festo.create_time,
                 "updateTime": festo.update_time
@@ -293,7 +293,7 @@ def get_currently_executing_info():
                 executing_info.append({
                     "id": festo.id,
                     "festoName": festo.name,
-                    "warningTime": festo.warning_time,
+                    "warningTime": festo.warning_time*5/60,
                     "formulaName": formula.name,
                     "schedulePressure": nearest_schedule.pressure,
                     "scheduleSequence": nearest_schedule.sequence,
