@@ -18,6 +18,7 @@ mp3_file_path = "asset/beep-warning.mp3"
 @scheduler.task('interval', id='schedule', seconds=5)  # 每3600秒执行一次
 def perform_schedule():
     with scheduler.app.app_context():
+        festo_deviation = current_app.config['FESTO_DEVIATION']
         current_time = datetime.now()
         try:
             festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
@@ -73,7 +74,7 @@ def perform_schedule():
                                                          pressure=festo_pressure)
                             db.session.add(festo_history)
                             # 正負誤差超過 3 就累積錯誤
-                            if not (dst_pressure + 3 > festo_pressure > dst_pressure - 3):
+                            if not (dst_pressure + festo_deviation > festo_pressure > dst_pressure - festo_deviation):
                                 detail.reset_times += 1
                                 # 延長 schedule time
                                 __update_schedule_start_time_and_end_time(
