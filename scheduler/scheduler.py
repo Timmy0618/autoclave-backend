@@ -59,14 +59,14 @@ def perform_schedule():
                         dst_pressure = detail.pressure
 
                         if status == 0:
-                            # 待执行状态，执行相应操作
+                            # 待執行狀態
                             print(
                                 f"待執行 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
                             festo_obj_conn.writePressure(
                                 slave_id, dst_pressure)
                             detail.status = 1
                         elif status == 1:
-                            # 执行中状态
+                            # 執行中狀態
                             print(
                                 f"執行中 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
                             festo_history = FestoHistory(slave_id=slave_id, batch_number=festo.batch_number,
@@ -75,17 +75,27 @@ def perform_schedule():
                             db.session.add(festo_history)
                             # 正負誤差超過 3 就累積錯誤
                             if not (dst_pressure + festo_deviation > festo_pressure > dst_pressure - festo_deviation):
+                                # 真空閥可能被關閉，所以要再打開
+                                festo_obj_conn.writePressure(
+                                    slave_id, dst_pressure)
                                 detail.reset_times += 1
                                 # 延長 schedule time
                                 # __update_schedule_start_time_and_end_time(
                                 #     detail.id)
                                 current_app.logger.warning(
                                     f"未到達壓力 Festo Slave ID: {slave_id}, Pressure: {festo_pressure}, Dst Pressure: {dst_pressure}, Status: {status}")
+                            else:
+                                # 到達目標壓力關閉真空閥
+                                festo_obj_conn.writePressure(
+                                    slave_id, 20000)
                         elif status == 2:
-                            # 结束状态
+                            # 結束狀態
                             detail.status = 2
                             print(
                                 f"結束 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
+                            # 結束打開洩壓
+                            festo_obj_conn.writePressure(
+                                slave_id, 30000)
 
                         # 有抓到schedule就結束
                         break
