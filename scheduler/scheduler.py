@@ -13,6 +13,7 @@ scheduler = APScheduler()
 pygame.init()
 
 mp3_file_path = "asset/beep-warning.mp3"
+festo_obj_conn = None
 
 
 @scheduler.task('interval', id='schedule', seconds=5)  # 每3600秒执行一次
@@ -20,13 +21,6 @@ def perform_schedule():
     with scheduler.app.app_context():
         festo_deviation = current_app.config['FESTO_DEVIATION']
         current_time = datetime.now()
-        try:
-            festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
-        except:
-            current_app.logger.error(
-                f"{current_app.config['COM_PORT']} RS485 connect error")
-            print("RS485 connect error")
-            return
 
         try:
             festos = FestoMain.query.all()
@@ -186,5 +180,12 @@ def __update_schedule_start_time_and_end_time(schedule_id):
 
 
 def init_scheduler(app):
+    try:
+        global festo_obj_conn
+        festo_obj_conn = festo_obj(current_app.config['COM_PORT'])
+    except:
+        print("RS485 connect error")
+        exit()
+
     scheduler.init_app(app)
     scheduler.start()
