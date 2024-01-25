@@ -77,10 +77,10 @@ def perform_schedule():
                             if not (dst_pressure + festo_deviation > festo_pressure > dst_pressure - festo_deviation):
                                 detail.reset_times += 1
                                 # 延長 schedule time
-                                __update_schedule_start_time_and_end_time(
-                                    detail.id)
+                                # __update_schedule_start_time_and_end_time(
+                                #     detail.id)
                                 current_app.logger.warning(
-                                    f"延長 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
+                                    f"未到達壓力 Festo Slave ID: {slave_id}, Pressure: {festo_pressure}, Dst Pressure: {dst_pressure}, Status: {status}")
                         elif status == 2:
                             # 结束状态
                             detail.status = 2
