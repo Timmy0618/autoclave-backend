@@ -87,9 +87,6 @@ def perform_schedule():
                             detail.status = 2
                             print(
                                 f"結束 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
-                            # 結束打開洩壓
-                            festo_obj_conn.writePressure(
-                                slave_id, 30000)
 
                         # 有抓到schedule就結束
                         break
