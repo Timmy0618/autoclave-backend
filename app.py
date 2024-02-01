@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from scheduler.scheduler import init_scheduler
+from waitress import serve
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -22,4 +23,4 @@ init_scheduler(app)
 
 if __name__ == '__main__':
 
-    app.run(host='0.0.0.0', debug=False, port=app.config['PORT'])
+    serve(app, host='0.0.0.0', port=app.config['PORT'])
