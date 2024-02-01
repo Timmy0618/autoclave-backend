@@ -55,14 +55,14 @@ def perform_schedule():
                         if status == 0:
                             # 待執行狀態
                             print(
-                                f"待執行 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
+                                f"To be executed Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
                             festo_obj_conn.writePressure(
                                 slave_id, dst_pressure)
                             detail.status = 1
                         elif status == 1:
                             # 執行中狀態
                             print(
-                                f"執行中 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
+                                f"Executing Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
                             festo_history = FestoHistory(slave_id=slave_id, batch_number=festo.batch_number,
                                                          formula_name=festo.formula.name, sequence=detail.sequence,
                                                          pressure=festo_pressure)
@@ -77,8 +77,10 @@ def perform_schedule():
                                 # __update_schedule_start_time_and_end_time(
                                 #     detail.id)
                                 current_app.logger.warning(
-                                    f"未到達壓力 Festo Slave ID: {slave_id}, Pressure: {festo_pressure}, Dst Pressure: {dst_pressure}, Status: {status}")
+                                    f"Pressure not reach Festo Slave ID: {slave_id}, Pressure: {festo_pressure}, Dst Pressure: {dst_pressure}, Status: {status}")
                             else:
+                                print(
+                                f"Festo Slave ID: {slave_id} close valve port")
                                 # 到達目標壓力關閉真空閥
                                 festo_obj_conn.writePressure(
                                     slave_id, 20000)
@@ -86,7 +88,7 @@ def perform_schedule():
                             # 結束狀態
                             detail.status = 2
                             print(
-                                f"結束 Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
+                                f"End Festo Slave ID: {slave_id}, Pressure: {dst_pressure}, Status: {status}")
 
                         # 有抓到schedule就結束
                         break
