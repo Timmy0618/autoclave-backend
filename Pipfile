@@ -34,7 +34,8 @@ pyserial = "*"
 crcmod = "*"
 pytz = "*"
 pygame = "*"
-waitress = "*"
+uvicorn = "*"
+asgiref = "*"
 
 [dev-packages]
 

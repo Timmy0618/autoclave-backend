@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
+import sys
 
 
 class logger:
@@ -9,7 +10,7 @@ class logger:
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
-        app.logger.setLevel(logging.DEBUG)
+        app.logger.setLevel(logging.INFO)
 
         log_file = log_dir + '/app.log'
         if not os.path.exists(log_file):
@@ -18,10 +19,15 @@ class logger:
         log_handler = TimedRotatingFileHandler(
             log_file, when='midnight', interval=1, backupCount=7)
 
-        log_handler.setLevel(logging.DEBUG)
+        log_handler.setLevel(logging.INFO)
 
         log_formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s')
         log_handler.setFormatter(log_formatter)
 
         app.logger.addHandler(log_handler)
+
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(log_formatter)
+        app.logger.addHandler(console_handler)
