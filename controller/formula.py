@@ -39,16 +39,16 @@ def create(data):
         result = {"code": 201, "msg": "Success",
                   "data": {"id": new_formula.id, "name": new_formula.name}
                   }
-        return make_response(jsonify(result), 201)
+        return result, 201
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -61,7 +61,7 @@ def read(formula_id):
 
         # If the formula is not found, return an error response
         if formula is None:
-            return make_response(jsonify({"code": 404, "msg": "Formula not found."}), 404)
+            return {"code": 404, "msg": "Formula not found."}, 404
 
         # Build the result to return
         result = {
@@ -73,15 +73,15 @@ def read(formula_id):
                 "details": [{"sequence": detail.sequence, "pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
             },
         }
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def read_multi():
@@ -98,8 +98,8 @@ def read_multi():
             formula_info = {
                 "id": formula.id,
                 "name": formula.name,
-                "createTime": formula.create_time,
-                "updateTime": formula.update_time,
+                "createTime": formula.create_time.isoformat() if formula.create_time else None,
+                "updateTime": formula.update_time.isoformat() if formula.update_time else None,
                 # "details": [{"pressure": detail.pressure, "processTime": detail.process_time} for detail in formula.formula_details]
             }
             formula_list.append(formula_info)
@@ -110,15 +110,15 @@ def read_multi():
             "msg": "Success",
             "data": formula_list
         }
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def update(formula_id, data):
@@ -128,7 +128,7 @@ def update(formula_id, data):
 
         # If the formula is not found, return an error response
         if formula is None:
-            return make_response(jsonify({"code": 404, "msg": "Formula not found."}), 404)
+            return {"code": 404, "msg": "Formula not found."}, 404
 
         # Extract and update the formula's name
         name = data.get("name")
@@ -161,16 +161,16 @@ def update(formula_id, data):
 
         # Build the result to return
         result = {"code": 200, "msg": "Success"}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def delete(formula_id):
@@ -180,7 +180,7 @@ def delete(formula_id):
 
         # If the formula is not found, return an error response
         if formula is None:
-            return make_response(jsonify({"code": 404, "msg": "Formula not found."}), 404)
+            return {"code": 404, "msg": "Formula not found."}, 404
 
         # Delete the formula details
         for detail in formula.formula_details:
@@ -192,13 +192,13 @@ def delete(formula_id):
 
         # Build the result to return
         result = {"code": 200, "msg": "Success"}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500

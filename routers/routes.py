@@ -1,16 +1,14 @@
-from routers.swagger import swagger_ui_blueprint
-from routers.schedule import schedule
-from routers.formula import formula
-from routers.user import user
-from routers.festo import festo
-from routers.history import history
+from routers.schedule import schedule_ns
+from routers.formula import formula_ns
+from routers.user import user_ns
+from routers.festo import festo_ns
+from routers.history import history_ns
 
 
 class routes:
-    def __init__(self, app) -> None:
-        app.register_blueprint(swagger_ui_blueprint)
-        app.register_blueprint(schedule, url_prefix='/schedule')
-        app.register_blueprint(formula, url_prefix='/formula')
-        app.register_blueprint(user, url_prefix='/user')
-        app.register_blueprint(festo, url_prefix='/festo')
-        app.register_blueprint(history, url_prefix='/history')
+    def __init__(self, app, api) -> None:
+        api.add_namespace(schedule_ns, path='/schedule')
+        api.add_namespace(formula_ns, path='/formula')
+        api.add_namespace(user_ns, path='/user')
+        api.add_namespace(festo_ns, path='/festo')
+        api.add_namespace(history_ns, path='/history')

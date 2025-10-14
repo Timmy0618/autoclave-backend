@@ -7,7 +7,6 @@ from sqlalchemy.exc import SQLAlchemyError
 def login(data):
     try:
         # Extract username and password from the request body
-        data = request.get_json()
         name = data.get("name")
         password = data.get("password")
 
@@ -16,17 +15,17 @@ def login(data):
 
         # If the user is not found or password doesn't match, return an error response
         if user is None or user.password != password:
-            return make_response(jsonify({"code": 401, "msg": "Invalid credentials."}), 401)
+            return {"code": 401, "msg": "Invalid credentials."}, 401
 
         # Build the result to return
         result = {"code": 200, "msg": "Login successful",
                   "data": {"accessToken": create_access_token(identity=user.id)}}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500

@@ -15,7 +15,10 @@ def create(data):
         formula, error_response = __check_and_get_entities(
             festo_main_id, pid_id, formula_id)
         if error_response:
-            return make_response(jsonify(error_response), error_response["code"])
+            return error_response, error_response["code"]
+
+        if formula is None:
+            return {"code": 404, "msg": "Formula not found."}, 404
 
         # Create a new ScheduleMain object and set parameters
         new_schedule_main = Schedule(
@@ -52,16 +55,16 @@ def create(data):
 
         # Build the result to return
         result = {"code": 201, "msg": "Success", "id": new_schedule_main.id}
-        return make_response(jsonify(result), 201)
+        return result, 201
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -74,7 +77,7 @@ def read(schedule_id):
 
         # If the schedule is not found, return an error response
         if schedule is None:
-            return make_response(jsonify({"code": 404, "msg": "Schedule not found."}), 404)
+            return {"code": 404, "msg": "Schedule not found."}, 404
 
         # Build the result to return
         result = {
@@ -98,15 +101,15 @@ def read(schedule_id):
                 ]
             }
         }
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def update(schedule_id, data):
@@ -116,7 +119,7 @@ def update(schedule_id, data):
 
         # If the schedule is not found, return an error response
         if schedule is None:
-            return make_response(jsonify({"code": 404, "msg": "Schedule not found."}), 404)
+            return {"code": 404, "msg": "Schedule not found."}, 404
 
         # Extract the required parameters from the JSON data
         festo_main_id = data.get("festoMainId")
@@ -126,7 +129,10 @@ def update(schedule_id, data):
         formula, error_response = __check_and_get_entities(
             festo_main_id, pid_id, formula_id)
         if error_response:
-            return make_response(jsonify(error_response), error_response["code"])
+            return error_response, error_response["code"]
+
+        if formula is None:
+            return {"code": 404, "msg": "Formula not found."}, 404
 
         # Update the schedule's parameters
         schedule.festo_main_id = festo_main_id
@@ -143,16 +149,16 @@ def update(schedule_id, data):
 
         # Build the result to return
         result = {"code": 200, "msg": "Success", "id": schedule.id}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -165,7 +171,7 @@ def update_detail(schedule_detail_id, data):
 
         # If the schedule detail is not found, return an error response
         if schedule_detail is None:
-            return make_response(jsonify({"code": 404, "msg": "Schedule detail not found."}), 404)
+            return {"code": 404, "msg": "Schedule detail not found."}, 404
 
         # Extract the parameters from the JSON data
         pressure = data.get("pressure")
@@ -197,16 +203,16 @@ def update_detail(schedule_detail_id, data):
 
         # Build the result to return
         result = {"code": 200, "msg": "Success", "id": schedule_detail.id}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -224,7 +230,7 @@ def update_multi_detail(data):
             schedule_detail = ScheduleDetail.query.get(schedule_detail_id)
 
             if schedule_detail is None:
-                return make_response(jsonify({"code": 404, "msg": f"Schedule Detail with ID {schedule_detail_id} not found."}), 404)
+                return {"code": 404, "msg": f"Schedule Detail with ID {schedule_detail_id} not found."}, 404
 
             if pressure is not None:
                 schedule_detail.pressure = pressure
@@ -238,16 +244,16 @@ def update_multi_detail(data):
         db.session.commit()
 
         result = {"code": 200, "msg": "Success"}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
     finally:
         db.session.close()
 
@@ -259,7 +265,7 @@ def delete(schedule_id):
 
         # If the schedule is not found, return an error response
         if schedule is None:
-            return make_response(jsonify({"code": 404, "msg": "Schedule not found."}), 404)
+            return {"code": 404, "msg": "Schedule not found."}, 404
 
         # Delete existing schedule details
         for schedule_detail in schedule.schedule_details:
@@ -271,16 +277,16 @@ def delete(schedule_id):
 
         # Build the result to return
         result = {"code": 200, "msg": "Schedule deleted successfully"}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()

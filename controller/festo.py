@@ -42,16 +42,16 @@ def create(data):
 
         # Build the result to return
         result = {"code": 201, "msg": "Festo created", "id": new_festo.id}
-        return make_response(jsonify(result), 201)
+        return result, 201
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -62,7 +62,7 @@ def read(festo_id):
         festo = FestoMain.query.get(festo_id)
 
         if festo is None:
-            return make_response(jsonify({"code": 404, "msg": "Festo not found."}), 404)
+            return {"code": 404, "msg": "Festo not found."}, 404
 
         formula_name = festo.formula.name if festo.formula else None
         formula_id = festo.formula.id if festo.formula else None
@@ -76,8 +76,8 @@ def read(festo_id):
                 "sequence": detail.sequence,
                 "status": detail.status,
                 "checkPressure": detail.check_pressure,
-                "timeEnd": detail.time_end,
-                "timeStart": detail.time_start,
+                "timeEnd": detail.time_end.isoformat() if detail.time_end else None,
+                "timeStart": detail.time_start.isoformat() if detail.time_start else None,
             } for detail in festo.schedule.schedule_details]
 
         # Build the response
@@ -92,17 +92,17 @@ def read(festo_id):
                 "slaveId": festo.slave_id,
                 "batchNumber": festo.batch_number,
                 "warningTime": festo.warning_time,
-                "createTime": festo.create_time,
-                "updateTime": festo.update_time,
+                "createTime": festo.create_time.isoformat() if festo.create_time else None,
+                "updateTime": festo.update_time.isoformat() if festo.update_time else None,
                 "schedules": schedules,
             },
         }
 
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
 
 def read_multi():
@@ -124,21 +124,21 @@ def read_multi():
                 "batchNumber": festo.batch_number,
                 "warningTime": festo.warning_time*5/60,
                 "scheduleId": schedule_id,
-                "createTime": festo.create_time,
-                "updateTime": festo.update_time
+                "createTime": festo.create_time.isoformat() if festo.create_time else None,
+                "updateTime": festo.update_time.isoformat() if festo.update_time else None
             })
 
         result = {"code": 200, "msg": "Success",
                   "data": festo_list}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def update(festo_id, data):
@@ -146,7 +146,7 @@ def update(festo_id, data):
         festo = FestoMain.query.get(festo_id)
 
         if festo is None:
-            return make_response(jsonify({"code": 404, "msg": "Festo not found."}), 404)
+            return {"code": 404, "msg": "Festo not found."}, 404
 
         # Extract the update parameters from the JSON data
         formula_id = data.get("formulaId")
@@ -185,7 +185,7 @@ def update(festo_id, data):
         if formula_id:
             formula = FormulaMain.query.get(formula_id)
             if formula is None:
-                return make_response(jsonify({"code": 404, "msg": "Formula not found."}), 404)
+                return {"code": 404, "msg": "Formula not found."}, 404
 
             if festo.schedule:
                 for schedule_detail in festo.schedule.schedule_details:
@@ -206,16 +206,16 @@ def update(festo_id, data):
 
         # Build the response
         result = {"code": 200, "msg": "Success", "id": festo.id}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -226,7 +226,7 @@ def delete(festo_id):
         festo = FestoMain.query.get(festo_id)
 
         if festo is None:
-            return make_response(jsonify({"code": 404, "msg": "Festo not found."}), 404)
+            return {"code": 404, "msg": "Festo not found."}, 404
 
         # Delete the associated schedules and schedule details
         for schedule in festo.schedules:
@@ -240,16 +240,16 @@ def delete(festo_id):
 
         # Build the response
         result = {"code": 200, "msg": "Success", "id": festo.id}
-        return make_response(jsonify(result), 200)
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()
@@ -303,16 +303,16 @@ def get_currently_executing_info():
 
         # 将查询结果包装成响应格式
         result = {"code": 200, "msg": "Success", "data": executing_info}
-        return make_response(jsonify(result))
+        return result, 200
 
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
     finally:
         db.session.close()

@@ -36,6 +36,7 @@ pytz = "*"
 pygame = "*"
 uvicorn = "*"
 asgiref = "*"
+flask-restx = "*"
 
 [dev-packages]
 

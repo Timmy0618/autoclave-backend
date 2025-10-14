@@ -37,15 +37,15 @@ def get_unique_batch_numbers():
             "data": unique_batch_numbers_list
         }
 
-        return make_response(jsonify(result))
+        return result, 200
 
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def get_batch_records_csv(data):
@@ -160,14 +160,14 @@ def get_festo_history(data):
             "data": history_list
         }
 
-        return make_response(jsonify(result))
+        return result, 200
     except SQLAlchemyError as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "Database error."}), 500)
+        return {"code": 500, "msg": "Database error."}, 500
 
     except Exception as e:
         current_app.logger.error(e)
-        return make_response(jsonify({"code": 500, "msg": "An error occurred."}), 500)
+        return {"code": 500, "msg": "An error occurred."}, 500
 
 
 def __get_period_list(startTime, endTime):
