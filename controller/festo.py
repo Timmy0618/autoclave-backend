@@ -187,11 +187,24 @@ def update(festo_id, data):
             if formula is None:
                 return {"code": 404, "msg": "Formula not found."}, 404
 
-            if festo.schedule:
+            # Check if festo has a schedule, if not create one
+            if not festo.schedule:
+                new_schedule = Schedule(
+                    festo_main_id=festo.id,
+                    pid_id=1,
+                    create_time=datetime.now(),
+                    update_time=datetime.now()
+                )
+                db.session.add(new_schedule)
+                db.session.flush()  # Get the schedule id without committing
+                schedule_id = new_schedule.id
+            else:
+                # Delete existing schedule details if schedule exists
                 for schedule_detail in festo.schedule.schedule_details:
                     db.session.delete(schedule_detail)
+                schedule_id = festo.schedule.id
 
-            update_schedules(formula, festo.schedule.id)
+            update_schedules(formula, schedule_id)
 
             festo.formula = formula
 
