@@ -279,6 +279,10 @@ def get_currently_executing_info():
         executing_info = []
 
         for festo in festos:
+            # 跳過沒有 schedule 的 festo
+            if not festo.schedule or not festo.schedule.schedule_details:
+                continue
+            
             # 查询与当前时间最接近的 Schedule
             nearest_schedule = None
             min_time_diff = None
@@ -286,6 +290,10 @@ def get_currently_executing_info():
             for schedule in festo.schedule.schedule_details:
                 time_start = schedule.time_start
                 time_end = schedule.time_end
+
+                # 跳過沒有時間資料的 schedule
+                if not time_start or not time_end:
+                    continue
 
                 # 检查当前时间是否在时间范围内
                 if time_start <= current_time <= time_end:
@@ -300,7 +308,7 @@ def get_currently_executing_info():
                     min_time_diff = time_diff
                     nearest_schedule = schedule
 
-            if nearest_schedule:
+            if nearest_schedule and festo.formula:
                 formula = festo.formula
 
                 executing_info.append({

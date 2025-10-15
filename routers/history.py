@@ -40,7 +40,7 @@ export_input = history_ns.model('ExportInput', {
     'batchNumber': fields.String(required=True, description='Batch number')
 })
 
-@history_ns.route('/')
+@history_ns.route('')
 class HistoryList(Resource):
     @history_ns.doc('get_history',
                     responses={
@@ -48,7 +48,7 @@ class HistoryList(Resource):
                         500: ('Database error', error_response)
                     })
     @history_ns.expect(history_input)
-    def get(self):
+    def post(self):
         data = history_ns.payload
         result, status = get_festo_history(data)
         return result, status
