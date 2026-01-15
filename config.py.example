@@ -15,7 +15,10 @@ class Config:
     DB_HOST = 'database'
     DB_PORT = '3306'
     DB_NAME = 'autoclave'
-    COM_PORT = os.environ.get('COM_PORT', 'COM1')
+    # RS485 轉以太網設備設定
+    FESTO_HOST = os.environ.get('FESTO_HOST', '192.168.1.100')
+    FESTO_PORT = int(os.environ.get('FESTO_PORT', 502))
+    FESTO_DEVIATION = int(os.environ.get('FESTO_DEVIATION', 3))
     encoded_password = quote_plus(DB_PASSWORD)
 
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USERNAME}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}'

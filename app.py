@@ -25,7 +25,7 @@ CORS(app)
 
 app.logger.info("應用程式啟動中...")
 
-# init_scheduler(app)
+init_scheduler(app)
 
 if __name__ == '__main__':
     app_asgi = WsgiToAsgi(app)

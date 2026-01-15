@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4c16ec972d2bb5a3812e5d3049ca33e9b56f2d926cce0a8788e6e2782931c8b3"
+            "sha256": "30a482bd140f1522fd8d6373f9dcee10bc0aabb5c81556b1f3094c9e03de0a7c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -546,6 +546,15 @@
             "index": "pypi",
             "version": "==2.7.0"
         },
+        "pymodbus": {
+            "hashes": [
+                "sha256:6910e385cb6b2f983cd457e9ecee2ff580dbb23cf3d84aefec0845e71edd606a",
+                "sha256:89865929f53bd5e32b4076dde00ee86d9b8afb1686832ed74e69d55df22729c3"
+            ],
+            "index": "pypi",
+            "markers": "python_full_version >= '3.10.0'",
+            "version": "==3.11.4"
+        },
         "pymysql": {
             "hashes": [
                 "sha256:3dda943ef3694068a75d69d071755dbecacee1adf9a1fc5b206830d2b67d25e8",
@@ -870,14 +879,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==4.5.0"
-        },
-        "tzdata": {
-            "hashes": [
-                "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8",
-                "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9"
-            ],
-            "markers": "python_version >= '2'",
-            "version": "==2025.2"
         },
         "tzlocal": {
             "hashes": [

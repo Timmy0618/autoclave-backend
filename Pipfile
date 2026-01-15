@@ -37,6 +37,7 @@ pygame = "*"
 uvicorn = "*"
 asgiref = "*"
 flask-restx = "*"
+pymodbus = "*"
 
 [dev-packages]
 
