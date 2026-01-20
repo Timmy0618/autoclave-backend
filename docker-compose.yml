@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # frontend:
   #   container_name: autoclave-frontend
@@ -17,9 +15,9 @@ services:
     restart: unless-stopped
     ports:
       - 5002:5002
-    image: timmy0618/autoclave-backend
-    # devices:
-    #   - "/dev/ttyS0:/COM1"  # 串口设备的映射
+    image: autoclave-backend
+    env_file:
+      - .env
 
   database:
     image: mysql:8.0.33
