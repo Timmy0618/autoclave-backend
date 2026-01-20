@@ -16,5 +16,4 @@ mssql/
 mysql/
 .DS_Store
 sqlite/
-config.py
 .env

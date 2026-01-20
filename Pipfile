@@ -38,6 +38,7 @@ uvicorn = "*"
 asgiref = "*"
 flask-restx = "*"
 pymodbus = "*"
+load-dotenv = "*"
 
 [dev-packages]
 
