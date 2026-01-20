@@ -15,137 +15,150 @@ class festo:
         self.port = port
         self.client = ModbusTcpClient(host, port=port, timeout=5, retries=3)
         self._connect()
+
+    def _ensure_connection(self):
+        """
+        確保連線處於可用狀態；如果被閒置斷線則重新連線。
+        返回 bool 代表目前是否可用。
+        """
+        if self.client and getattr(self.client, "connected", False):
+            return True
+        return self._connect()
     
     def _connect(self):
         """建立連接"""
         try:
             if self.client and self.client.connected:
                 return True
+            
+            # 嘗試連接
             result = self.client.connect()
-            if result:
-                print(f"✓ Successfully connected to {self.host}:{self.port}")
-                return True
+            
+            # pymodbus 的 connect() 通常返回 True 或拋出異常
+            # 如果沒有拋出異常，我們認為連接成功
+            if result is True or result is None:  # 有些版本返回 None
+                # 額外驗證連接是否真的有效
+                if hasattr(self.client, 'connected') and self.client.connected:
+                    print(f"✓ Successfully connected to {self.host}:{self.port}")
+                    return True
+                else:
+                    print(f"✗ Connection established but not confirmed")
+                    return False
             else:
                 print(f"✗ Failed to connect to {self.host}:{self.port}")
                 return False
+                
         except Exception as e:
             print(f"✗ Connection error: {e}")
             return False
     
-    def _ensure_connection(self):
-        """確保連接有效，必要時重新連接"""
-        if not self.client:
-            return False
-        if not self.client.connected:
-            print("Connection lost, attempting to reconnect...")
-            return self._connect()
-        return True
+    def _call(self, fn, *args, **kwargs):
+        """
+        統一的 Modbus 調用包裝，先確保連線，失敗才重連（無 heartbeat）。
+        為避免閒置後的半開連線，每次操作前都刷新連線。
+        """
+        # 避免半開連線：先關閉舊 socket，再重新建立
+        if self.client:
+            self.client.close()
+        if not self._connect():
+            print("Modbus operation failed: connection not available")
+            return None
+        try:
+            # 直接嘗試操作，不預先檢查連接
+            resp = fn(*args, **kwargs)
+            if resp.isError():
+                raise IOError(f"Modbus error: {resp}")
+            return resp
+        except Exception as e:
+            # 收到斷線後，先嘗試重新連線再重試，不預先噴錯
+            if self.client:
+                self.client.close()
+            if self._connect():
+                try:
+                    print("Retrying operation after reconnect...")
+                    resp = fn(*args, **kwargs)
+                    if resp.isError():
+                        raise IOError(f"Modbus error after reconnect: {resp}")
+                    print("✓ Operation succeeded after reconnect")
+                    return resp
+                except Exception as e2:
+                    print(f"Retry after reconnect also failed: {e2}")
+            print(f"Modbus operation failed: {e}")
+            return None
 
     def readSetPressure(self, id):
         """讀取設定壓力 (Holding Register 0)"""
-        if not self._ensure_connection():
+        rr = self._call(
+            self.client.read_holding_registers,
+            address=0, count=1, device_id=id
+        )
+        if rr is None:
             return None
-        try:
-            rr = self.client.read_holding_registers(address=0, count=1, device_id=id)
-            if rr.isError():
-                print(f"Error reading set pressure: {rr}")
-                return None
-            value = rr.registers[0]
-            return round(value / 100 - 100, 2)
-        except Exception as e:
-            print(f"Exception reading set pressure: {e}")
-            return None
+        value = rr.registers[0]
+        return round(value / 100 - 100, 2)
 
     def readVacuumPressure(self, id):
         """讀取真空壓力 (Input Register 1)"""
-        if not self._ensure_connection():
+        ri = self._call(
+            self.client.read_input_registers,
+            address=1, count=1, device_id=id
+        )
+        if ri is None:
             return None
-        try:
-            ri = self.client.read_input_registers(address=1, count=1, device_id=id)
-            if ri.isError():
-                print(f"Error reading vacuum pressure: {ri}")
-                return None
-            value = ri.registers[0]
-            return round(value / 100 - 100, 2)
-        except Exception as e:
-            print(f"Exception reading vacuum pressure: {e}")
-            return None
+        value = ri.registers[0]
+        return round(value / 100 - 100, 2)
 
     def readChamberPressure(self, id):
         """讀取腔室壓力 (Input Register 2)"""
-        if not self._ensure_connection():
+        ri = self._call(
+            self.client.read_input_registers,
+            address=2, count=1, device_id=id
+        )
+        if ri is None:
             return None
-        try:
-            ri = self.client.read_input_registers(address=2, count=1, device_id=id)
-            if ri.isError():
-                print(f"Error reading chamber pressure: {ri}")
-                return None
-            value = ri.registers[0]
-            return value / 100
-        except Exception as e:
-            print(f"Exception reading chamber pressure: {e}")
-            return None
+        value = ri.registers[0]
+        return value / 100
 
     def readMulti(self, id):
         """讀取 PID 參數 (Holding Registers 3-6)"""
-        if not self._ensure_connection():
+        rr = self._call(
+            self.client.read_holding_registers,
+            address=3, count=4, device_id=id
+        )
+        if rr is None:
             return None
-        try:
-            rr = self.client.read_holding_registers(address=3, count=4, device_id=id)
-            if rr.isError():
-                print(f"Error reading multi: {rr}")
-                return None
-            kp, ki, kd, step = rr.registers
-            return {"kp": kp, "ki": ki, "kd": kd, "step": step}
-        except Exception as e:
-            print(f"Exception reading multi: {e}")
-            return None
+        kp, ki, kd, step = rr.registers
+        return {"kp": kp, "ki": ki, "kd": kd, "step": step}
 
     def writePressure(self, id, pressure):
         """寫入目標壓力 (Holding Register 0)"""
-        if not self._ensure_connection():
+        value = int((pressure + 100) * 100)
+        print(f"Writing pressure: {pressure} -> register value: {value} to device {id}")
+        wr = self._call(
+            self.client.write_register,
+            address=0, value=value, device_id=id
+        )
+        if wr is None:
             return False
-        try:
-            value = int((pressure + 100) * 100)
-            print(f"Writing pressure: {pressure} -> register value: {value} to device {id}")
-            wr = self.client.write_register(address=0, value=value, device_id=id)
-            if wr.isError():
-                print(f"Error writing pressure: {wr}")
-                return False
-            print(f"✓ Successfully wrote pressure")
-            return True
-        except Exception as e:
-            print(f"Exception writing pressure: {e}")
-            return False
+        print(f"✓ Successfully wrote pressure")
+        return True
 
     def writeKp(self, id, kp):
         """寫入 Kp (Holding Register 3)"""
-        if not self._ensure_connection():
-            return False
-        try:
-            wr = self.client.write_register(address=3, value=kp, device_id=id)
-            if wr.isError():
-                print(f"Error writing Kp: {wr}")
-                return False
-            return True
-        except Exception as e:
-            print(f"Exception writing Kp: {e}")
-            return False
+        wr = self._call(
+            self.client.write_register,
+            address=3, value=kp, device_id=id
+        )
+        return wr is not None
 
     def writeMulti(self, id, kp, ki, kd, step):
         """寫入 PID 參數 (Holding Registers 3-6)"""
-        if not self._ensure_connection():
-            return False
-        try:
-            values = [kp, ki, kd, step]
-            wr = self.client.write_registers(address=3, values=values, device_id=id)
-            if wr.isError():
-                print(f"Error writing multi: {wr}")
-                return False
-            return True
-        except Exception as e:
-            print(f"Exception writing multi: {e}")
-            return False
+        values = [kp, ki, kd, step]
+        wr = self._call(
+            self.client.write_registers,
+            address=3, values=values, device_id=id
+        )
+        return wr is not None
 
     def close(self):
         """關閉連接"""
