@@ -7,6 +7,7 @@ from models.shared import db
 from modules.festo import festo as festo_obj
 from datetime import datetime, timedelta
 import pygame
+import os
 
 scheduler = APScheduler()
 # 初始化 pygame
@@ -129,7 +130,7 @@ def history_checker():
     with scheduler.app.app_context():
         print("clear history table")
         try:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago = datetime.now() - timedelta(days=int(os.getenv('HISTORY_RETENTION_DAYS', 30)))
 
             records_to_delete = FestoHistory.query.filter(
                 FestoHistory.create_time <= thirty_days_ago

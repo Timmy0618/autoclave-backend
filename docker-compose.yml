@@ -1,10 +1,10 @@
 services:
-  # frontend:
-  #   container_name: autoclave-frontend
-  #   image: timmy0618/autoclave-frontend
-  #   ports:
-  #     - 80:80
-  #   restart: always
+  frontend:
+    container_name: autoclave-frontend
+    image: autoclave-frontend
+    ports:
+      - 80:80
+    restart: always
     
   backend:
     volumes:
